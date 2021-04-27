@@ -1,6 +1,6 @@
 import torchvision
 from torchvision import transforms
-from model2 import CIFARModel
+from model import CIFARModel
 
 
 transform = transforms.Compose(
@@ -9,6 +9,9 @@ transform = transforms.Compose(
 
 trainset = torchvision.datasets.CIFAR10(root='./datasets', train=True,
                                         download=True, transform=transform)
-model = CIFARModel(trainset).to('cuda')
+testset = torchvision.datasets.CIFAR10(root='./datasets', train=False,
+                                       download=True, transform=transform)
+
+model = CIFARModel(trainset, testset).to('cuda')
 model.run()
 print(model.calculate_accuracy())

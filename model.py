@@ -15,7 +15,7 @@ class CIFARModel(nn.Module):
     epochs = 100
     batch_size = 64
 
-    def __init__(self, dataset: Dataset):
+    def __init__(self, dataset: Dataset, testset: Dataset):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
@@ -27,6 +27,10 @@ class CIFARModel(nn.Module):
         self.dataset = dataset
         self.dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size,
                                                       shuffle=True, num_workers=2)
+
+        self.testset = testset
+        self.testloader = torch.utils.data.DataLoader(testset, batch_size=self.batch_size,
+                                                      shuffle=False, num_workers=2)
 
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.loss_function = nn.CrossEntropyLoss()
@@ -65,11 +69,12 @@ class CIFARModel(nn.Module):
 
             average_loss += loss.item()
 
-            if i % 1000 == 0:
-                # Only print every 1000 batches so that printing doesn't
+            if i % 100 == 0:
+                # Only print every 100 batches so that printing doesn't
                 # slow down the model
                 print(f'Batch #{i}/{data_count}, Loss: {loss.item()}           ', end='\r')
 
+        print()
         return average_loss / data_count
 
 
@@ -97,7 +102,7 @@ class CIFARModel(nn.Module):
         total = 0
 
         with torch.no_grad():
-            for data in self.dataloader:
+            for data in self.testloader:
                 images, labels = data[0].to(self.device), data[1].to(self.device)
                 outputs = self(images)
 
