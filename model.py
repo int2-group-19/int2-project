@@ -90,10 +90,12 @@ class CIFARModel(nn.Module):
         :param dataset: The dataset to run on
         """
 
+        max_accuracy = 0.0
+
         if self.epochs == -1:
-            running_decreases = [False, False, False]
+            # True indicates a decrease in score relative to the best model 
+            running_decreases = [False, False, False, False, False]
             epoch = 1
-            previous_accuracy = 0
 
             while any(v == False for v in running_decreases):
                 print(f'Epoch #{epoch} ')
@@ -101,15 +103,17 @@ class CIFARModel(nn.Module):
                 average_loss = self.train()
 
                 accuracy = self.calculate_accuracy()
+
                 del running_decreases[0]
-                running_decreases.append(accuracy < previous_accuracy)
-                previous_accuracy = accuracy
+                running_decreases.append(accuracy < max_accuracy)
+                if accuracy > max_accuracy:
+                    max_accuracy = accuracy
 
                 print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
 
                 epoch += 1
 
-            print('Terminating due to 3 successive accuracy decreases')
+            print('Terminating due to 5 successive scores below best value')
 
 
         for epoch in range(self.epochs):
