@@ -6,23 +6,32 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.tensor import Tensor
 import torch.utils.data
-from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
 
 
 class CIFARModel(nn.Module):
 
-    epochs = 100
+    # Set to -1 to use automatic number of epochs
+    epochs = -1
+
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 18, 5),  # Reduces size by 4px  (28px)
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),   # Halves image size    (14px)
+            nn.Conv2d(18, 64, 5),  # Reduces size by 4px  (10px)
+            nn.ReLU(),
+            nn.MaxPool2d(2, 2),   # Halves image size    (5px)
+        )
+
+        self.linear = nn.Sequential(
+            nn.Linear(64 * 5 * 5, 120),
+            nn.Linear(120, 60),
+            nn.Linear(60, 10)
+        )
 
         self.dataset = dataset
         self.dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size,
@@ -37,13 +46,9 @@ class CIFARModel(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), momentum=0.9, lr=0.001)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-
+        x = self.conv(x)
+        x = x.view(-1, 64 * 5 * 5)  # -1 means infer this dimension
+        x = self.linear(x)
         return x
 
     def train(self) -> float:
@@ -85,16 +90,37 @@ class CIFARModel(nn.Module):
         :param dataset: The dataset to run on
         """
 
+        if self.epochs == -1:
+            running_decreases = [False, False, False]
+            epoch = 1
+            previous_accuracy = 0
+
+            while any(v == False for v in running_decreases):
+                print(f'Epoch #{epoch} ')
+
+                average_loss = self.train()
+
+                accuracy = self.calculate_accuracy()
+                del running_decreases[0]
+                running_decreases.append(accuracy < previous_accuracy)
+                previous_accuracy = accuracy
+
+                print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
+
+                epoch += 1
+
+            print('Terminating due to 3 successive accuracy decreases')
+
+
         for epoch in range(self.epochs):
             print(f'Epoch #{epoch} ')
 
             average_loss = self.train()
-            print(f'[DONE] [Average Loss: {average_loss}]')
-            print(self.calculate_accuracy())
+            print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {self.calculate_accuracy()*100}%]')
 
     def calculate_accuracy(self) -> float:
         """
-        Calculate the accuracy of the model by testing it on its dataset.
+        Calculate the accuracy of the model by testing it on its testing dataset.
 
         :returns: A float representing the accuracy of the model.
         """
