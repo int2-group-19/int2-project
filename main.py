@@ -1,6 +1,6 @@
 import torchvision
 from torchvision import transforms
-from model import CIFARModel
+from models.model_dob9601 import CIFARModel
 
 
 transform = transforms.Compose(
@@ -14,4 +14,3 @@ testset = torchvision.datasets.CIFAR10(root='./datasets', train=False,
 
 model = CIFARModel(trainset, testset).to('cuda')
 model.run()
-print(model.calculate_accuracy())
