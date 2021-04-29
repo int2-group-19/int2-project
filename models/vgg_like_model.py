@@ -1,5 +1,5 @@
 from __future__ import annotations
-from base_model import BaseModel
+from models.base_model import BaseModel
 
 import torch.nn as nn
 import torch.optim as optim
@@ -7,13 +7,13 @@ from torch.tensor import Tensor
 from torch.utils.data.dataset import Dataset
 
 
-class CIFARModel(nn.Module):
+class CIFARModel(BaseModel):
 
     epochs = -1
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
-        super().__init__()
+        super().__init__(dataset, testset)
         self.conv = nn.Sequential(
             nn.Conv2d(3, 32, 5, padding=2),
             nn.BatchNorm2d(32),
