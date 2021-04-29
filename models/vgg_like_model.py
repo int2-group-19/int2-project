@@ -1,5 +1,6 @@
 from __future__ import annotations
-
+import torchvision
+from torchvision import transforms
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,20 +11,71 @@ from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
 
 
+transform = transforms.Compose(
+    [transforms.ToTensor(),
+     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+train_transform = transforms.Compose(
+    [  # transforms.RandomRotation(30),
+        # transforms.RandomResizedCrop(224),
+        # transforms.RandomHorizontalFlip(),
+        #  transforms.ColorJitter(brightness=0.4, contrast=0.4,
+        #                         saturation=0.4, hue=0.1),
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+    ])
+
+trainset = torchvision.datasets.CIFAR10(root='./datasets', train=True,
+                                        download=True, transform=train_transform)
+print(trainset)
+testset = torchvision.datasets.CIFAR10(root='./datasets', train=False,
+                                       download=True, transform=transform)
+
+
 class CIFARModel(nn.Module):
 
-    epochs = 30
+    epochs = 100
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 32, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(32, 32, 5)
-        self.conv3 = nn.Conv2d(32, 64, 5)
-        self.fc1 = nn.Linear(64 * 4 * 4, 120)
-        self.fc2 = nn.Linear(120, 64)
-        self.fc3 = nn.Linear(64, 10)
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 32, 5, padding=2),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 5, padding=2),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            # nn.Conv2d(64, 64, 5,padding=2),
+            # nn.BatchNorm2d(64),
+            # nn.ReLU(),
+            nn.MaxPool2d(3, 2),
+
+            nn.Conv2d(64, 128, 5, padding=2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 5, padding=2),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.MaxPool2d(3, 2),
+
+            nn.Conv2d(128, 256, 5, padding=2),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, 5, padding=2),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.MaxPool2d(3, 2),
+
+        )
+
+        self.linear = nn.Sequential(
+            nn.Linear(256 * 3 * 3, 120),
+            nn.ReLU(),
+            nn.Linear(120, 64),
+            nn.ReLU(),
+            nn.Linear(64, 10)
+        )
 
         self.dataset = dataset
         self.dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size,
@@ -39,16 +91,10 @@ class CIFARModel(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), momentum=0.9, lr=0.004)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = F.relu(self.conv1(x))
+        x = self.conv(x)
         # print(x.shape)
-        x = self.pool(F.relu(self.conv2(x)))
-        # print(x.shape)
-        x = self.pool(F.relu(self.conv3(x)))
-        # print(x.shape)
-        x = x.view(-1, 64 * 4 * 4)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = x.view(-1, 256 * 3 * 3)
+        x = self.linear(x)
 
         return x
 
@@ -141,3 +187,8 @@ class CIFARModel(nn.Module):
         :param path: The path to save to.
         """
         torch.save(self, path)
+
+
+model = CIFARModel(trainset, testset).to('cuda')
+model.run()
+print(model.calculate_accuracy())
