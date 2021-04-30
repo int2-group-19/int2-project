@@ -83,7 +83,6 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
                 running_decreases.append(False)
             else:
                 running_decreases.append(True)
-            print(running_decreases)
 
             print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
 

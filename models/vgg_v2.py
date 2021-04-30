@@ -9,48 +9,57 @@ from torch.utils.data.dataset import Dataset
 
 class CIFARModel(BaseModel):
 
-    # Set to -1 to use automatic number of epochs
     epochs = -1
-
-    batch_size = 32
+    batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
         super().__init__(dataset, testset)
         self.conv = nn.Sequential(
-            nn.Conv2d(3, 64, 5, padding=2),  # 32px
+            nn.Conv2d(3, 32, 5, padding=2),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.Conv2d(64, 128, 3, padding=1),  # 32px
+            nn.Conv2d(32, 64, 5, padding=2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),   # Halves image size    (16px)
+            # nn.Conv2d(64, 64, 5,padding=2),
+            # nn.BatchNorm2d(64),
+            # nn.ReLU(),
+            nn.MaxPool2d(3, 2),
 
-            nn.Conv2d(128, 256, 5, padding=2),  # 16px
+            nn.Conv2d(64, 128, 5, padding=2),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(256, 512, 3, padding=1),  # 16px
+            nn.Conv2d(128, 128, 5, padding=2),
+            nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),   # Halves image size    (8px)
+            nn.MaxPool2d(3, 2),
 
-            nn.Conv2d(512, 1024, 5, padding=2),
+            nn.Conv2d(128, 256, 5, padding=2),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.Conv2d(1024, 2048, 5, padding=2),
+            nn.Conv2d(256, 256, 5, padding=2),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(3, 2),
+
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(512 * 4 * 4, 1024),
-            nn.Linear(1024, 512),
-            nn.Linear(512, 10)
+            nn.Linear(256 * 3 * 3, 120),
+            nn.ReLU(),
+            nn.Linear(120, 64),
+            nn.ReLU(),
+            nn.Linear(64, 10)
         )
 
         self.loss_function = nn.CrossEntropyLoss()
-        self.optimizer = optim.SGD(self.parameters(), momentum=0.9, lr=0.001)
+        self.optimizer = optim.SGD(self.parameters(), momentum=0.9, lr=0.004)
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.conv(x)
-        x = x.view(-1, 512 * 4 * 4)  # -1 means infer this dimension
+        x = x.view(-1, 256 * 3 * 3)
         x = self.linear(x)
+
         return x
 
     def train(self) -> float:
@@ -72,8 +81,8 @@ class CIFARModel(BaseModel):
             if i % 100 == 0:
                 # Only print every 100 batches so that printing doesn't
                 # slow down the model
-                print(f'Batch #{i}/{data_count}, Loss: {loss.item()}           ', end='\r')
+                print(
+                    f'Batch #{i}/{data_count}, Loss: {loss.item()}           ', end='\r')
 
         print()
         return average_loss / data_count
-
