@@ -38,44 +38,58 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     def run(self):
-        """
-        Run the model on a given dataset.
-
-        :param dataset: The dataset to run on
-        """
-
-        max_accuracy = 0.0
+        """Run the model on a given dataset."""
 
         if self.epochs == -1:
-            # True indicates a decrease in score relative to the best model 
-            running_decreases = [False, False, False, False, False]
-            epoch = 1
+            self.__auto_run()
+        else:
+            self.__run()
 
-            while any(v == False for v in running_decreases):
-                print(f'Epoch #{epoch} ')
+    def __run(self):
+        """
+        Run the model for a given number of epochs.
 
-                average_loss = self.train()
-
-                accuracy = self.calculate_accuracy()
-
-                del running_decreases[0]
-                running_decreases.append(accuracy < max_accuracy)
-                if accuracy > max_accuracy:
-                    max_accuracy = accuracy
-
-                print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
-
-                epoch += 1
-
-            print('Terminating due to 5 successive scores below best value')
-            return
-
-
+        This function is called when epochs is set to any number other than -1.
+        """
         for epoch in range(self.epochs):
             print(f'Epoch #{epoch} ')
 
             average_loss = self.train()
             print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {self.calculate_accuracy()*100}%]')
+
+    def __auto_run(self):
+        """
+        Run the model for an automatically determined number of epochs.
+
+        The number of epochs is determined via running the model until 5 successive epochs
+          don't beat the previous best score.
+        """
+        print('Entering autorun mode')
+        # True indicates a decrease in score relative to the best model 
+        max_accuracy = 0.0
+        running_decreases = [False, False, False, False, False]
+        epoch = 1
+
+        while any(v == False for v in running_decreases):
+            print(f'Epoch #{epoch} ')
+
+            average_loss = self.train()
+
+            accuracy = self.calculate_accuracy()
+
+            del running_decreases[0]
+            if accuracy > max_accuracy:
+                max_accuracy = accuracy
+                running_decreases.append(False)
+            else:
+                running_decreases.append(True)
+            print(running_decreases)
+
+            print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
+
+            epoch += 1
+
+        print('Terminating due to 5 successive scores below best value')
 
     def calculate_accuracy(self) -> float:
         """
