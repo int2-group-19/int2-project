@@ -30,12 +30,12 @@ class CIFARModel(BaseModel):
             nn.MaxPool2d(2, 2),   # Halves image size    (8px)
 
             nn.Conv2d(512, 1024, 5, padding=2),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(1024),
             nn.ReLU(),
             nn.Conv2d(1024, 2048, 5, padding=2),
-            nn.BatchNorm2d(256),
+            nn.BatchNorm2d(2048),
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
+            nn.MaxPool2d(3, 3),
         )
 
         self.linear = nn.Sequential(
