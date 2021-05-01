@@ -18,7 +18,7 @@ class CIFARModel(BaseModel):
             nn.Conv2d(3, 32, 5, padding=2),
             nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.Conv2d(32, 64, 5, padding=2),
+            nn.Conv2d(32, 64, 3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             # nn.Conv2d(64, 64, 5,padding=2),
@@ -29,7 +29,7 @@ class CIFARModel(BaseModel):
             nn.Conv2d(64, 128, 5, padding=2),
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(128, 128, 5, padding=2),
+            nn.Conv2d(128, 128, 3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
             nn.MaxPool2d(3, 2),
@@ -37,7 +37,7 @@ class CIFARModel(BaseModel):
             nn.Conv2d(128, 256, 5, padding=2),
             nn.BatchNorm2d(256),
             nn.ReLU(),
-            nn.Conv2d(256, 256, 5, padding=2),
+            nn.Conv2d(256, 256, 3, padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU(),
             nn.MaxPool2d(3, 2),
@@ -62,7 +62,7 @@ class CIFARModel(BaseModel):
 
         return x
 
-    def train(self) -> float:
+    def train_model(self) -> float:
         data_count = len(self.dataloader)
 
         average_loss = 0
