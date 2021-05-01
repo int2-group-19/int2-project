@@ -1,4 +1,5 @@
 import abc
+import datetime
 from typing import Type, TypeVar
 
 from torch import nn
@@ -54,7 +55,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         for epoch in range(self.epochs):
             print(f'Epoch #{epoch} ')
 
-            average_loss = self.train()
+            average_loss = self.train_model()
             print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {self.calculate_accuracy()*100}%]')
 
     def __auto_run(self):
@@ -64,6 +65,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         The number of epochs is determined via running the model until 5 successive epochs
           don't beat the previous best score.
         """
+        output_filename = datetime.datetime.now().strftime('%d.%m-%H:%M') + '.pt'
         print('Entering autorun mode')
         # True indicates a decrease in score relative to the best model 
         max_accuracy = 0.0
@@ -73,12 +75,14 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         while any(v == False for v in running_decreases):
             print(f'Epoch #{epoch} ')
 
-            average_loss = self.train()
+            average_loss = self.train_model()
 
             accuracy = self.calculate_accuracy()
 
             del running_decreases[0]
             if accuracy > max_accuracy:
+                print('New best model - serialising')
+                self.save(f'outputs/{output_filename}')
                 max_accuracy = accuracy
                 running_decreases.append(False)
             else:
@@ -115,7 +119,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         return correct / total
 
     @abc.abstractmethod
-    def train(self) -> float:
+    def train_model(self) -> float:
         """
         Run a singular epoch on the given dataset.
 
