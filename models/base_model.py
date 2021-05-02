@@ -53,11 +53,19 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
 
         This function is called when epochs is set to any number other than -1.
         """
+        accuracies = []
+
         for epoch in range(self.epochs):
             print(f'Epoch #{epoch} ')
 
             average_loss = self.train_model()
-            print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {self.calculate_accuracy()*100}%]')
+            accuracy = self.calculate_accuracy()
+            accuracies.append(accuracy)
+
+            print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100}%]')
+
+        plt.plot(accuracies)
+        plt.show()
 
     def __auto_run(self):
         """
