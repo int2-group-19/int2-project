@@ -2,6 +2,7 @@ import abc
 import datetime
 from typing import Type, TypeVar
 
+import matplotlib.pyplot as plt
 from torch import nn
 import torch
 import torch.utils.data
@@ -69,7 +70,8 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         print('Entering autorun mode')
         # True indicates a decrease in score relative to the best model 
         max_accuracy = 0.0
-        running_decreases = [False, False, False, False, False]
+        running_decreases = [False for _ in range(5)]
+        accuracies = []
         epoch = 1
 
         while any(v == False for v in running_decreases):
@@ -78,6 +80,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
             average_loss = self.train_model()
 
             accuracy = self.calculate_accuracy()
+            accuracies.append(accuracy)
 
             del running_decreases[0]
             if accuracy > max_accuracy:
@@ -91,6 +94,9 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
             print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
 
             epoch += 1
+
+        plt.plot(accuracies)
+        plt.show()
 
         print('Terminating due to 5 successive scores below best value')
 
