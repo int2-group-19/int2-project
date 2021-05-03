@@ -11,7 +11,7 @@ from torch.utils.data.dataset import Dataset
 
 class CIFARModel(BaseModel):
 
-    epochs = 50
+    epochs = 25
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
@@ -28,7 +28,6 @@ class CIFARModel(BaseModel):
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.Dropout(p=0.2),
-            nn.MaxPool2d(3, 2, padding=1),
             nn.Conv2d(64, 128, 3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
@@ -46,10 +45,11 @@ class CIFARModel(BaseModel):
             nn.Conv2d(512, 1024, 3, padding=1),
             nn.BatchNorm2d(1024),
             nn.ReLU(),
+            nn.MaxPool2d(3, 2, padding=1),
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(1024 * 4 * 4 + 256 * 4 * 4, 120),
+            nn.Linear(1024 * 4 * 4 + 256 * 8 * 8, 120),
             nn.ReLU(),
             nn.Linear(120, 64),
             nn.ReLU(),
@@ -65,7 +65,7 @@ class CIFARModel(BaseModel):
         y: Tensor = self.conv2(x)
         x = self.conv3(y)
         x = x.view(-1, 1024 * 4 * 4)
-        y = y.view(-1, 256 * 4 * 4)
+        y = y.view(-1, 256 * 8 * 8)
 
         z = torch.cat([x, y], 1)
 
