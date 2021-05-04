@@ -47,6 +47,13 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         else:
             self.__run()
 
+
+        training_accuracy = self.calculate_training_accuracy()
+        testing_accuracy = self.calculate_accuracy()
+
+        print(f"Training accuracy: {training_accuracy}")
+        print(f"Testing accuracy: {testing_accuracy}")
+
     def __run(self):
         """
         Run the model for a given number of epochs.
@@ -132,6 +139,32 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
                 correct += (predicted == labels).sum().item()
 
         self.train()
+        return correct / total
+
+
+    def calculate_training_accuracy(self) -> float:
+        """
+        Calculate the training accuracy of the model by testing it on its training dataset.
+
+        :returns: A float representing the training accuracy of the model.
+        """
+
+        correct = 0
+        total = 0
+
+        with torch.no_grad():
+            for data in self.dataloader:
+                images, labels = data[0].to(self.device), data[1].to(self.device)
+                outputs = self(images)
+
+                _, predicted = torch.max(outputs.data, 1)
+
+                # The number of items is the 0th dimension
+                total += labels.size(0)
+
+                # The sum of a boolean tensor is equal to the number of "Trues" in it
+                correct += (predicted == labels).sum().item()
+
         return correct / total
 
     @abc.abstractmethod
