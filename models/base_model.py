@@ -78,7 +78,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         print('Entering autorun mode')
         # True indicates a decrease in score relative to the best model 
         max_accuracy = 0.0
-        running_decreases = [False for _ in range(5)]
+        running_decreases = [False for _ in range(30)]
         accuracies = []
         epoch = 1
 
@@ -117,6 +117,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
         correct = 0
         total = 0
 
+        self.eval()
         with torch.no_grad():
             for data in self.testloader:
                 images, labels = data[0].to(self.device), data[1].to(self.device)
@@ -130,6 +131,7 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
                 # The sum of a boolean tensor is equal to the number of "Trues" in it
                 correct += (predicted == labels).sum().item()
 
+        self.train()
         return correct / total
 
     @abc.abstractmethod
