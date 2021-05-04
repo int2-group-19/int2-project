@@ -11,49 +11,77 @@ from torch.utils.data.dataset import Dataset
 
 class CIFARModel(BaseModel):
 
-    epochs = 25
+    epochs = 120
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
         super().__init__(dataset, testset)
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.MaxPool2d(3, 2, padding=1),
-        )
-
-        self.conv2 = nn.Sequential(
-            nn.Conv2d(32, 64, 3, padding=1),
+            nn.Conv2d(3, 64, 3, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.Dropout(p=0.2),
+            nn.MaxPool2d(3, 2, padding=1),
             nn.Conv2d(64, 128, 3, padding=1),
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.Conv2d(128, 256, 3, padding=1),
-            nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
             nn.MaxPool2d(3, 2, padding=1),
         )
 
-        self.conv3 = nn.Sequential(
-            nn.Conv2d(256, 512, 3, padding=1),
+        self.conv128 = nn.Sequential(
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, 3, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(),
+        )
+
+        self.conv128to256 = nn.Conv2d(128, 256, 3, padding=1)
+
+        self.conv256 = nn.Sequential(
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+        )
+
+        self.conv256to512 = nn.Conv2d(256, 512, 3, padding=1)
+
+        self.conv512 = nn.Sequential(
+            nn.Conv2d(512, 512, 3, padding=1),
             nn.BatchNorm2d(512),
             nn.ReLU(),
-            nn.Conv2d(512, 1024, 3, padding=1),
-            nn.BatchNorm2d(1024),
+            nn.Conv2d(512, 512, 3, padding=1),
+            nn.BatchNorm2d(512),
             nn.ReLU(),
-            nn.MaxPool2d(3, 2, padding=1),
+            nn.Conv2d(512, 512, 3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.Conv2d(512, 512, 3, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(1024 * 4 * 4 + 256 * 8 * 8, 120),
+            nn.Linear(512 * 8 * 8, 120),
             nn.ReLU(),
-            nn.Linear(120, 64),
+            nn.Linear(120, 120),
             nn.ReLU(),
-            nn.Linear(64, 10),
+            nn.Linear(120, 10),
         )
 
         self.loss_function = nn.CrossEntropyLoss()
@@ -61,17 +89,23 @@ class CIFARModel(BaseModel):
         # self.optimizer = optim.Adagrad(self.parameters(), lr=4e-3)
 
     def forward(self, x: Tensor) -> Tensor:
-        x = self.conv1(x)
-        y: Tensor = self.conv2(x)
-        x = self.conv3(y)
-        x = x.view(-1, 1024 * 4 * 4)
-        y = y.view(-1, 256 * 8 * 8)
+        y: Tensor = self.conv1(x)
 
-        z = torch.cat([x, y], 1)
+        x = self.conv128(y)
+        x += y
 
-        z = self.linear(z)
+        y = self.conv128to256(x)
 
-        return z
+        x = self.conv256(y)
+        x += y
+
+        y = self.conv256to512(x)
+
+        x = self.conv512(y)
+        x += y
+
+        x = x.view(-1, 512 * 8 * 8)
+        return self.linear(x)
 
     def train_model(self) -> float:
         data_count = len(self.dataloader)
