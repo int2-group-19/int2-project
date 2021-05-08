@@ -1,3 +1,11 @@
+from __future__ import annotations
+from models.base_model import BaseModel
+
+import torch.nn as nn
+import torch.optim as optim
+from torch.tensor import Tensor
+from torch.utils.data.dataset import Dataset
+
 class CIFARModel(BaseModel):
  
     epochs = 400
@@ -8,48 +16,48 @@ class CIFARModel(BaseModel):
         self.conv = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1),
             nn.BatchNorm2d(32),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(32, 64, 3, padding=1),
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(64, 64, 5,padding=2),
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Dropout(0.1),
             nn.MaxPool2d(3, 2, padding=1),
  
             nn.Conv2d(64, 128, 3, padding=1),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(128, 128, 3, padding=1),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(128, 128, 3, padding=1),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Dropout(0.1),
             nn.MaxPool2d(3, 2, padding=1),
  
  
             nn.Conv2d(128, 256, 3, padding=1),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(256, 256, 3, padding=1),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(256, 256, 3, padding=1),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Dropout(0.1),
             nn.MaxPool2d(3, 2, padding=1),
  
  
             nn.Conv2d(256, 512, 3, padding=1),
             nn.BatchNorm2d(512),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Conv2d(512, 512, 3, padding=1),
             nn.BatchNorm2d(512),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Dropout(0.1),
             nn.Conv2d(512, 512, 3, padding=1),
             nn.MaxPool2d(3, 2, padding=1),
@@ -59,10 +67,10 @@ class CIFARModel(BaseModel):
         self.linear = nn.Sequential(
             nn.Dropout(0.5),
             nn.Linear(512 * 2 * 2, 600),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Dropout(0.5),
             nn.Linear(600, 600),
-            nn.LeakyReLU(1/5.5),
+            nn.RReLU(1/5.5),
             nn.Linear(600, 10),
             nn.Softmax(dim=1)
         )
