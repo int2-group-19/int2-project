@@ -108,12 +108,24 @@ class BaseModel(nn.Module, abc.ABC, metaclass=BaseModelMeta):
 
             print(f'[DONE] [Average Loss: {average_loss}] [Accuracy: {accuracy*100:.2f}%]')
 
+            self.update_learning_rate(epoch)
             epoch += 1
 
         plt.plot(accuracies)
         plt.show()
 
         print('Terminating due to 5 successive scores below best value')
+
+    def update_learning_rate(self, epoch: int) -> None:
+        """
+        Modify the learning rate during runtime.
+
+        This method can optionally be overriden in order to update the learning rate whilst the
+        network is running.
+
+        :param epoch: The current epoch the network is on.
+        """
+        ...
 
     def calculate_accuracy(self) -> float:
         """
