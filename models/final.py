@@ -16,7 +16,7 @@ class CIFARModel(BaseModel):
         self.conv = nn.Sequential(
             nn.Conv2d(3, 32, 3, padding=1),
             nn.BatchNorm2d(32),
-            nn.LeakyReLU()(1/5.5),
+            nn.LeakyReLU(1/5.5),
             nn.Conv2d(32, 64, 3, padding=1),
             nn.BatchNorm2d(64),
             nn.LeakyReLU(1/5.5),
