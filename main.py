@@ -1,6 +1,6 @@
 import torchvision
 from torchvision import transforms
-from models.vgg_v2 import CIFARModel
+from models.final import CIFARModel
 
 
 def main():
