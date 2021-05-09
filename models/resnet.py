@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import torch
 from models.base_model import BaseModel
 
 import torch.nn as nn
@@ -11,7 +10,7 @@ from torch.utils.data.dataset import Dataset
 
 class CIFARModel(BaseModel):
 
-    epochs = 120
+    epochs = 100
     batch_size = 64
 
     def __init__(self, dataset: Dataset, testset: Dataset):
@@ -59,7 +58,10 @@ class CIFARModel(BaseModel):
             nn.ReLU(),
         )
 
-        self.conv256to512 = nn.Conv2d(256, 512, 3, padding=1)
+        self.conv256to512 = nn.Sequential(
+            nn.Conv2d(256, 512, 3, padding=1),
+            nn.MaxPool2d(3, 2, padding=1)
+        )
 
         self.conv512 = nn.Sequential(
             nn.Conv2d(512, 512, 3, padding=1),
@@ -77,11 +79,12 @@ class CIFARModel(BaseModel):
         )
 
         self.linear = nn.Sequential(
-            nn.Linear(512 * 8 * 8, 120),
+            nn.Linear(512 * 4 * 4, 600),
             nn.ReLU(),
-            nn.Linear(120, 120),
+            nn.Linear(600, 600),
             nn.ReLU(),
-            nn.Linear(120, 10),
+            nn.Linear(600, 10),
+            nn.Softmax(dim=0)
         )
 
         self.loss_function = nn.CrossEntropyLoss()
@@ -104,7 +107,8 @@ class CIFARModel(BaseModel):
         x = self.conv512(y)
         x += y
 
-        x = x.view(-1, 512 * 8 * 8)
+        x = x.view(-1, 512 * 4 * 4)
+
         return self.linear(x)
 
     def train_model(self) -> float:
