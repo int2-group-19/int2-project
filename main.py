@@ -4,10 +4,12 @@ from models.final import CIFARModel
 
 
 def main():
-    transform = transforms.Compose(
-        [transforms.ToTensor(),
-         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
-
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomAffine(5)
+    ])
     trainset = torchvision.datasets.CIFAR10(root='./datasets', train=True,
                                             download=True, transform=transform)
     testset = torchvision.datasets.CIFAR10(root='./datasets', train=False,
